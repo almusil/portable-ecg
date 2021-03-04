@@ -1,0 +1,79 @@
+[package]
+authors = ["Ales Musil <aedvin1@gmail.com>"]
+name = "ecg"
+edition = "2018"
+version = "0.1.0"
+
+[lib]
+name = "lib"
+path = "lib/lib.rs"
+
+# FIXME use proper release once available
+[dependencies.ili9341]
+git = "https://github.com/yuri91/ili9341-rs"
+branch = "master"
+features = ["graphics"]
+
+# FIXME use proper release once available
+[dependencies.stm32g0xx-hal]
+git = "https://github.com/stm32-rs/stm32g0xx-hal"
+branch = "master"
+features = ["stm32g070", "rt"]
+
+[dependencies]
+defmt = "0.2"
+defmt-rtt = "0.2"
+cortex-m = "0.7"
+cortex-m-rtic = "0.5"
+display-interface-parallel-gpio = "0.4"
+embedded-graphics = "0.6"
+heapless = "0.6"
+volatile-register = "0.2"
+
+panic-probe = { version = "0.2", features = ["print-defmt"] }
+
+[features]
+# set logging levels here
+default = [
+  "defmt-default",
+]
+
+# do NOT modify these features
+defmt-default = []
+defmt-trace = []
+defmt-debug = []
+defmt-info = []
+defmt-warn = []
+defmt-error = []
+
+[profile.dev]
+codegen-units = 1
+debug = 2
+debug-assertions = true # <-
+incremental = false
+opt-level = 3 # <-
+overflow-checks = true # <-
+
+[profile.release]
+codegen-units = 1
+debug = 2
+debug-assertions = false # <-
+incremental = false
+lto = 'fat'
+opt-level = 3 # <-
+overflow-checks = false # <-
+
+# do not optimize proc-macro crates = faster builds from scratch
+[profile.dev.build-override]
+codegen-units = 8
+debug = false
+debug-assertions = false
+opt-level = 0
+overflow-checks = false
+
+[profile.release.build-override]
+codegen-units = 8
+debug = false
+debug-assertions = false
+opt-level = 0
+overflow-checks = false
