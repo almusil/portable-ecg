@@ -1,16 +1,16 @@
 use core::convert::Infallible;
 use display_interface_parallel_gpio::WriteOnlyDataCommand;
-use embedded_graphics::drawable::Drawable;
+use embedded_graphics::draw_target::DrawTarget;
 use embedded_graphics::pixelcolor::Rgb565;
-use embedded_graphics::DrawTarget;
-use ili9341::{DisplaySize320x480, Error, Ili9341, Orientation, Scroller};
+use embedded_graphics::Drawable;
+use ili9341::{DisplayError, DisplaySize320x480, Ili9341, Orientation, Scroller};
 use stm32g0xx_hal::hal::blocking::delay::DelayMs;
 use stm32g0xx_hal::hal::digital::v2::OutputPin;
 
 use crate::hw::Lcd;
 
 #[derive(Debug)]
-pub struct IliError(pub Error<Infallible>);
+pub struct IliError(pub DisplayError);
 
 pub struct IliLcd<I, R> {
     ili: Ili9341<I, R>,
@@ -58,7 +58,7 @@ where
         self.ili.clear(color).map_err(IliError)
     }
 
-    fn draw<D: Drawable<Rgb565>>(&mut self, drawable: D) -> Result<(), Self::Error> {
+    fn draw<D: Drawable<Color = Rgb565>>(&mut self, drawable: D) -> Result<D::Output, Self::Error> {
         drawable.draw(&mut self.ili).map_err(IliError)
     }
 

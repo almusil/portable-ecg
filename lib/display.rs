@@ -1,9 +1,11 @@
 use core::fmt::Write;
-use embedded_graphics::fonts::{Font12x16, Text};
+use embedded_graphics::geometry::Size;
+use embedded_graphics::mono_font::ascii::FONT_9X18;
+use embedded_graphics::mono_font::MonoTextStyle;
 use embedded_graphics::pixelcolor::{Rgb565, RgbColor};
 use embedded_graphics::prelude::{Point, Primitive};
-use embedded_graphics::primitives::Rectangle;
-use embedded_graphics::style::{PrimitiveStyle, PrimitiveStyleBuilder, TextStyle};
+use embedded_graphics::primitives::{PrimitiveStyle, PrimitiveStyleBuilder, Rectangle};
+use embedded_graphics::text::Text;
 use heapless::spsc::Consumer;
 use heapless::spsc::Queue;
 use heapless::String;
@@ -78,18 +80,24 @@ where
     fn draw_bpm_value(&mut self, bpm: u16, color: Rgb565) -> Result<(), LCDER> {
         let mut buffer = String::<8>::new();
         write!(&mut buffer, "{:>3}", bpm).map_err(|_| Error::BufferWrite)?;
-        let bpm_val = Text::new(&buffer, DataColumn::TEXT_BPM_VAL_POSITION)
-            .into_styled(TextStyle::new(Font12x16, color));
-        self.lcd.draw(&bpm_val).map_err(Error::Lcd)?;
+        let bpm_val = Text::new(
+            &buffer,
+            DataColumn::TEXT_BPM_VAL_POSITION,
+            MonoTextStyle::new(&FONT_9X18, color),
+        );
+        self.lcd.draw(bpm_val).map_err(Error::Lcd)?;
         Ok(())
     }
 
     fn draw_single(&mut self, data: &Data, color: Rgb565) -> Result<(), LCDER> {
         let x = (Frame::TOP_LEFT.x as u16 + self.horizontal_position) as i32;
         let y = (Frame::BOTTOM_RIGHT.y as u16 - data.y) as i32;
-        let rect = Rectangle::new(Point::new(x, y - data.height as i32), Point::new(x, y))
-            .into_styled(PrimitiveStyle::with_fill(color));
-        self.lcd.draw(&rect).map_err(Error::Lcd)
+        let rect = Rectangle::new(
+            Point::new(x, y - data.height as i32),
+            Size::new(1, data.height as u32),
+        )
+        .into_styled(PrimitiveStyle::with_fill(color));
+        self.lcd.draw(rect).map_err(Error::Lcd)
     }
 
     fn scroll(&mut self) -> Result<(), LCDER> {
@@ -114,26 +122,26 @@ where
             Frame::TOP_LEFT.x - Frame::BORDER_WIDTH,
             Frame::TOP_LEFT.y - Frame::BORDER_WIDTH,
         );
-        let bottom_right = Point::new(
-            Frame::BOTTOM_RIGHT.x + Frame::BORDER_WIDTH,
-            Frame::BOTTOM_RIGHT.y + Frame::BORDER_WIDTH,
-        );
-        let border = Rectangle::new(top_left, bottom_right).into_styled(
+        let border_size = Size::new(Frame::WIDTH as u32, Frame::HEIGHT as u32);
+        let border = Rectangle::new(top_left, border_size).into_styled(
             PrimitiveStyleBuilder::new()
                 .stroke_width(Frame::BORDER_WIDTH as u32)
                 .stroke_color(Color::FRAME_BORDER)
                 .fill_color(Color::BACKGROUND)
                 .build(),
         );
-        self.lcd.draw(&border).map_err(Error::Lcd)?;
+        self.lcd.draw(border).map_err(Error::Lcd)?;
         Ok(())
     }
 
     fn init_data_column(&mut self) -> Result<(), LCDER> {
-        let bpm = Text::new("BPM", DataColumn::TEXT_BPM_POSITION)
-            .into_styled(TextStyle::new(Font12x16, Color::BPM_TEXT));
+        let bpm = Text::new(
+            "BPM",
+            DataColumn::TEXT_BPM_POSITION,
+            MonoTextStyle::new(&FONT_9X18, Color::BPM_TEXT),
+        );
         self.draw_bpm_value(self.last_bpm, Color::BPM_TEXT)?;
-        self.lcd.draw(&bpm).map_err(Error::Lcd)?;
+        self.lcd.draw(bpm).map_err(Error::Lcd)?;
         Ok(())
     }
 
@@ -193,8 +201,8 @@ impl Frame {
 struct DataColumn;
 
 impl DataColumn {
-    const TEXT_WIDTH: i32 = 12 * 3;
-    const TEXT_HEIGHT: i32 = 16;
+    const TEXT_WIDTH: i32 = 9 * 3;
+    const TEXT_HEIGHT: i32 = 18;
     const TEXT_SPACING: i32 = 5;
     const TEXT_BPM_POSITION: Point = Point::new(
         Frame::BOTTOM_RIGHT.x

@@ -8,20 +8,15 @@ version = "0.1.0"
 name = "lib"
 path = "lib/lib.rs"
 
-# FIXME use proper release once available
-[dependencies.ili9341]
-git = "https://github.com/yuri91/ili9341-rs"
-rev = "2b7ee112fb4e4399c6d8408b47c7f926174e0037"
-features = ["graphics"]
-
 [dependencies]
 defmt = "0.2"
 defmt-rtt = "0.2"
 cortex-m = "0.7"
 cortex-m-rtic = "0.5"
 display-interface-parallel-gpio = "0.4"
-embedded-graphics = "0.6"
+embedded-graphics = "0.7"
 heapless = "0.7"
+ili9341 = "0.5"
 volatile-register = "0.2"
 
 panic-probe = { version = "0.2", features = ["print-defmt"] }
