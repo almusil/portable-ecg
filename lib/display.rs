@@ -4,10 +4,9 @@ use embedded_graphics::pixelcolor::{Rgb565, RgbColor};
 use embedded_graphics::prelude::{Point, Primitive};
 use embedded_graphics::primitives::Rectangle;
 use embedded_graphics::style::{PrimitiveStyle, PrimitiveStyleBuilder, TextStyle};
-use heapless::consts::{U512, U8};
+use heapless::spsc::Consumer;
 use heapless::spsc::Queue;
-use heapless::spsc::{Consumer, SingleCore};
-use heapless::{ArrayLength, String};
+use heapless::String;
 
 use crate::error::{Error, Result};
 use crate::hw::Lcd;
@@ -15,30 +14,28 @@ use crate::hw::Lcd;
 const SAMPLE_MAX: usize = 3450;
 const SAMPLE_MIN: usize = 0;
 
-pub struct Display<'a, LEN, LCD, LCDER>
+pub struct Display<'a, LCD, LCDER, const LEN: usize>
 where
-    LEN: ArrayLength<u16>,
     LCD: Lcd<Error = LCDER>,
 {
-    current_data: Queue<Data, U512, u16, SingleCore>,
-    buffer: Consumer<'a, u16, LEN, u8, SingleCore>,
+    current_data: Queue<Data, 512>,
+    buffer: Consumer<'a, u16, LEN>,
     horizontal_position: u16,
     last_sample: u16,
     last_bpm: u16,
     lcd: LCD,
 }
 
-impl<'a, LEN, LCD, LCDER> Display<'a, LEN, LCD, LCDER>
+impl<'a, LCD, LCDER, const LEN: usize> Display<'a, LCD, LCDER, LEN>
 where
-    LEN: ArrayLength<u16>,
     LCD: Lcd<Error = LCDER>,
 {
-    pub fn new(lcd: LCD, buffer: Consumer<'a, u16, LEN, u8, SingleCore>) -> Result<Self, LCDER> {
+    pub fn new(lcd: LCD, buffer: Consumer<'a, u16, LEN>) -> Result<Self, LCDER> {
         let mut display = Display {
-            current_data: unsafe { Queue::u16_sc() },
+            current_data: Queue::new(),
             buffer,
             horizontal_position: (Frame::WIDTH - 1) as u16,
-            last_sample: Display::<'a, LEN, LCD, LCDER>::map_sample(0),
+            last_sample: Display::<'a, LCD, LCDER, LEN>::map_sample(0),
             last_bpm: 0,
             lcd,
         };
@@ -56,7 +53,7 @@ where
             let data_to_remove = self.current_data.dequeue().ok_or(Error::Queue)?;
             self.draw_single(&data_to_remove, Color::BACKGROUND)?;
             // Draw current data
-            let mapped_sample = Display::<'a, LEN, LCD, LCDER>::map_sample(sample);
+            let mapped_sample = Display::<'a, LCD, LCDER, LEN>::map_sample(sample);
             let data_to_add = (self.last_sample, mapped_sample).into();
             self.draw_single(&data_to_add, Color::DATA)?;
             self.current_data
@@ -79,7 +76,7 @@ where
     }
 
     fn draw_bpm_value(&mut self, bpm: u16, color: Rgb565) -> Result<(), LCDER> {
-        let mut buffer = String::<U8>::new();
+        let mut buffer = String::<8>::new();
         write!(&mut buffer, "{:>3}", bpm).map_err(|_| Error::BufferWrite)?;
         let bpm_val = Text::new(&buffer, DataColumn::TEXT_BPM_VAL_POSITION)
             .into_styled(TextStyle::new(Font12x16, color));
@@ -141,7 +138,7 @@ where
     }
 
     fn init_data(&mut self) -> Result<(), LCDER> {
-        let zero = Display::<'a, LEN, LCD, LCDER>::map_sample(0);
+        let zero = Display::<'a, LCD, LCDER, LEN>::map_sample(0);
         let data = (zero, zero).into();
         for _ in 0..Frame::WIDTH {
             self.draw_single(&data, Color::DATA)?;

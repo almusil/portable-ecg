@@ -4,8 +4,7 @@
 use lib as _;
 
 use cortex_m::singleton;
-use heapless::consts::U64;
-use heapless::spsc::{Queue, SingleCore};
+use heapless::spsc::Queue;
 use lib::display::Display;
 use lib::hw::{
     get_calibration, init_clock, init_lcd, Adc, AdcConfig, BeatCounter, BeatTimer, FrameTimer,
@@ -23,8 +22,8 @@ use stm32g0xx_hal::time::U32Ext;
 #[app(device = stm32g0xx_hal::stm32, peripherals = true)]
 const APP: () = {
     struct Resources {
-        display: Display<'static, U64, HwLcd, IliError>,
-        sampler: Sampler<'static, U64>,
+        display: Display<'static, HwLcd, IliError, 64>,
+        sampler: Sampler<'static, 64>,
         frame_timer: FrameTimer,
         adc: Adc,
         beat_timer: BeatTimer,
@@ -37,8 +36,7 @@ const APP: () = {
         let device: stm32g0xx_hal::stm32::Peripherals = cx.device;
 
         // Buffers
-        let queue: &'static mut Queue<_, _, _, _> =
-            singleton!(: Queue<u16, U64, u8, SingleCore> = unsafe {Queue::u8_sc()}).unwrap();
+        let queue: &'static mut Queue<_, 64> = singleton!(: Queue<u16, 64> = Queue::new()).unwrap();
         let dma_buffer: &'static mut [u16; 4] = singleton!(: [u16; 4] = [0; 4]).unwrap();
         let (producer, consumer) = queue.split();
 
@@ -124,7 +122,7 @@ const APP: () = {
     #[task(binds = DMA_CHANNEL1, priority = 2, resources = [adc, sampler])]
     fn dma(cx: dma::Context) {
         let adc: &mut Adc = cx.resources.adc;
-        let sampler: &mut Sampler<'_, _> = cx.resources.sampler;
+        let sampler: &mut Sampler<'_, 64> = cx.resources.sampler;
 
         adc.unpend();
         sampler.sample::<IliError>().unwrap();
@@ -133,7 +131,7 @@ const APP: () = {
     #[task(binds = TIM6, priority = 1, resources = [display, frame_timer])]
     fn tim6(cx: tim6::Context) {
         let frame_timer: &mut FrameTimer = cx.resources.frame_timer;
-        let display: &mut Display<'_, _, _, _> = cx.resources.display;
+        let display: &mut Display<'_, _, _, 64> = cx.resources.display;
 
         frame_timer.unpend();
         display.frame().unwrap();
@@ -143,7 +141,7 @@ const APP: () = {
     fn tim7(cx: tim7::Context) {
         let counter: &mut BeatCounter = cx.resources.beat_counter;
         let timer: &mut BeatTimer = cx.resources.beat_timer;
-        let display: &mut Display<'_, _, _, _> = cx.resources.display;
+        let display: &mut Display<'_, _, _, 64> = cx.resources.display;
 
         timer.unpend();
         display.update_bpm(counter.read() * 6).unwrap();

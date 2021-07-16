@@ -1,28 +1,21 @@
-use heapless::spsc::{Producer, SingleCore};
-use heapless::ArrayLength;
+use heapless::spsc::Producer;
 
 use crate::error::Error;
 use crate::error::Result;
 use crate::Buffer;
 
-pub struct Sampler<'a, LEN>
-where
-    LEN: ArrayLength<u16>,
-{
-    producer: Producer<'a, u16, LEN, u8, SingleCore>,
+pub struct Sampler<'a, const LEN: usize> {
+    producer: Producer<'a, u16, LEN>,
     buffer: &'static Buffer,
     first_half: bool,
     calibration: u32,
     full_scale: u16,
 }
 
-impl<'a, LEN> Sampler<'a, LEN>
-where
-    LEN: ArrayLength<u16>,
-{
+impl<'a, const LEN: usize> Sampler<'a, LEN> {
     pub fn new(
         buffer: &'static Buffer,
-        producer: Producer<'a, u16, LEN, u8, SingleCore>,
+        producer: Producer<'a, u16, LEN>,
         vref_calibration: u16,
         full_scale: u16,
     ) -> Self {
