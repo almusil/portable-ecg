@@ -11,7 +11,7 @@ path = "lib/lib.rs"
 # FIXME use proper release once available
 [dependencies.ili9341]
 git = "https://github.com/yuri91/ili9341-rs"
-branch = "master"
+rev = "2b7ee112fb4e4399c6d8408b47c7f926174e0037"
 features = ["graphics"]
 
 # FIXME use proper release once available
