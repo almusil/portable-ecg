@@ -14,12 +14,6 @@ git = "https://github.com/yuri91/ili9341-rs"
 rev = "2b7ee112fb4e4399c6d8408b47c7f926174e0037"
 features = ["graphics"]
 
-# FIXME use proper release once available
-[dependencies.stm32g0xx-hal]
-git = "https://github.com/stm32-rs/stm32g0xx-hal"
-branch = "master"
-features = ["stm32g070", "rt"]
-
 [dependencies]
 defmt = "0.2"
 defmt-rtt = "0.2"
@@ -31,6 +25,7 @@ heapless = "0.6"
 volatile-register = "0.2"
 
 panic-probe = { version = "0.2", features = ["print-defmt"] }
+stm32g0xx-hal = { version = "0.1", features = ["stm32g070", "rt"] }
 
 [features]
 # set logging levels here
