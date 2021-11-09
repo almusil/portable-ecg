@@ -1,6 +1,5 @@
 use cortex_m::peripheral::SYST;
 use display_interface_parallel_gpio::PGPIO8BitInterface;
-use stm32g0xx_hal::delay::Delay;
 use stm32g0xx_hal::dma::C1;
 use stm32g0xx_hal::gpio::gpioa::{PA0, PA4, PA5, PA6};
 use stm32g0xx_hal::gpio::gpiob::{PB0, PB1, PB2, PB3, PB4, PB5, PB6, PB7, PB8, PB9};
@@ -8,6 +7,7 @@ use stm32g0xx_hal::gpio::{Analog, DefaultMode, Output, PushPull};
 use stm32g0xx_hal::prelude::OutputPin;
 use stm32g0xx_hal::rcc::{Config, PllConfig, Rcc, RccExt};
 use stm32g0xx_hal::stm32g0::stm32g070::RCC;
+use stm32g0xx_hal::timer::delay::Delay;
 
 use crate::hw::adc::{Adc as HwAdc, Calibration};
 use crate::hw::lcd::{IliError, IliLcd};

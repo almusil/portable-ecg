@@ -1,12 +1,12 @@
 use core::ops::Deref;
 use stm32g0xx_hal::analog::adc::{Adc as HalAdc, VRef};
-use stm32g0xx_hal::delay::Delay;
 use stm32g0xx_hal::dma::{Channel as DmaChannel, Direction, Event, Priority, WordSize};
 use stm32g0xx_hal::hal::adc::Channel as AdcChannel;
 use stm32g0xx_hal::hal::blocking::delay::DelayUs;
 use stm32g0xx_hal::rcc::Rcc;
 use stm32g0xx_hal::stm32g0::stm32g070::{ADC, RCC, SYST, TIM1};
 use stm32g0xx_hal::time::Hertz;
+use stm32g0xx_hal::timer::delay::Delay;
 use volatile_register::RO;
 
 use crate::hw::timers::SampleTimer;
@@ -100,7 +100,7 @@ where
 
     fn configure(&mut self, peripheral_addr: u32, memory_addr: u32, len: u16) {
         self.channel.set_priority_level(Priority::VeryHigh);
-        self.channel.set_word_size::<u16>(WordSize::BITS16);
+        self.channel.set_word_size(WordSize::BITS16);
         self.channel.set_direction(Direction::FromPeripheral);
         self.channel.set_peripheral_address(peripheral_addr, false);
         self.channel.set_memory_address(memory_addr, true);

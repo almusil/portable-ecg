@@ -144,6 +144,10 @@ impl TimerPin<TIM1> for UnusedPin {
     fn setup(&self) {
         // Do nothing
     }
+
+    fn release(self) -> Self {
+        self
+    }
 }
 
 pub struct SampleTimer {
